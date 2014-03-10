@@ -421,7 +421,10 @@
   var wraps = {
     double_quote: {left: "“", right: "”"},
     parens: {left: "(", right: ")"},
-    heading1: {left: "H1", right: ""}
+    heading1: {left: "1", right: ""},
+    heading2: {left: "2", right: ""},
+    heading3: {left: "3", right: ""},
+    heading4: {left: "4", right: ""}
   };
 
   function parseDom(topnode,$instructionator) {
@@ -431,33 +434,38 @@
     for(var i=0;i<topnode.childNodes.length;i++) {
         node=topnode.childNodes[i];
 
-        //TODO add modifiers, e.g. based on node.nodeName
-        switch(node.nodeName) {
-          case "H1":
-            //commented out until view for headings is implemented    
-            //inst.pushWrap(wraps.heading1);
+        var hpatt = /[Hh]([1234])/;
+
+        if( hpatt.test( node.nodeName ) )
+        {
+            inst.pushWrap(wraps[ ["heading", node.nodeName.match(hpatt)[1] ].join("") ]);
             inst.modNext("start_paragraph");
             parseDom(node,inst);
             inst.spacer();
             inst.clearWrap();
             inst.modPrev("end_paragraph");
-            break;
-          case "SCRIPT":
-            break;
-          case "#text":
-            if(node.textContent.trim().length > 0) parseText(node.textContent.trim(),inst);
-            break;
-          case "P":
-            inst.clearWrap();
-            inst.modNext("start_paragraph");
-            parseDom(node, inst)
-            inst.modPrev("end_paragraph");
-            inst.clearWrap();
-            break;
-          case "#comment":
-            break;
-          default:
-            parseDom(node,inst);
+        }
+        else
+        {
+            //TODO add modifiers, e.g. based on node.nodeName
+            switch(node.nodeName) {
+              case "SCRIPT":
+                break;
+              case "#text":
+                if(node.textContent.trim().length > 0) parseText(node.textContent.trim(),inst);
+                break;
+              case "P":
+                inst.clearWrap();
+                inst.modNext("start_paragraph");
+                parseDom(node, inst)
+                inst.modPrev("end_paragraph");
+                inst.clearWrap();
+                break;
+              case "#comment":
+                break;
+              default:
+                parseDom(node,inst);
+            }
         }
     }
 
@@ -1049,8 +1057,43 @@
       selectMode();
     }
   }
+  
+    var readability_token = '172b057cd7cfccf27b60a36f16b1acde12783893';
 
+    function readibility_select(){
+        var url = document.URL;
 
+        $.getJSON("https://www.readability.com/api/content/v1/parser?url="+ url +"&token=" + readability_token +"&callback=?",
+        function (data) {
+
+            if(data.error){
+                alert("Article extraction failed. Try selecting text instead.");
+                return;
+            }
+
+            var div = document.createElement("DIV");
+
+            var title = "";
+            if(data.title !== ""){
+                title = ["<H1>", data.title, "</H1>"].join("");
+            }
+
+            var author = "";
+            if(data.author !== null){
+                author = ["<H2>By ", data.author, "</H2>"].join("");
+            }
+        
+            var author_title = [title, author].join("");
+            
+            div.innerHTML = [ author_title, jQuery(data.content).html() ].join("");
+        
+            init(div);
+            
+            
+        }).error(function() { alert("Article extraction failed. Try selecting text instead."); });
+
+    }
+  
   window.jetzt = {
     selectMode: selectMode
     , init: init
@@ -1071,6 +1114,10 @@
 
 
   window.addEventListener("keydown", function (ev) {
+    if (!instructions && ev.altKey && ev.keyCode === 82) {
+      ev.preventDefault();
+      readibility_select();
+    }
     if (!instructions && ev.altKey && ev.keyCode === 83) {
       ev.preventDefault();
       select();
