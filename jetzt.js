@@ -150,7 +150,7 @@
   var DEFAULT_OPTIONS = {
       target_wpm: 400,
       scale: 1,
-      dark: "false",
+      dark: false,
       modifiers: {
         normal: 1,
         start_clause: 1,
@@ -418,13 +418,13 @@
     };
   }
 
-  var wraps = {
+var wraps = {
     double_quote: {left: "“", right: "”"},
     parens: {left: "(", right: ")"},
-    heading1: {left: "1", right: ""},
-    heading2: {left: "2", right: ""},
-    heading3: {left: "3", right: ""},
-    heading4: {left: "4", right: ""}
+    heading1: {left: "^", right: ""},
+    heading2: {left: "*", right: ""},
+    heading3: {left: "|", right: ""},
+    heading4: {left: ">", right: ""}
   };
 
   function parseDom(topnode,$instructionator) {
@@ -434,7 +434,7 @@
     for(var i=0;i<topnode.childNodes.length;i++) {
         node=topnode.childNodes[i];
 
-        var hpatt = /[Hh]([1234])/;
+          var hpatt = /[Hh]([1234])/;
 
         if( hpatt.test( node.nodeName ) )
         {
@@ -1046,7 +1046,18 @@
     window.addEventListener("mousemove", moveHandler);
     window.addEventListener("keydown", escHandler);
   };
+  
+  function scrape() {
+      var readable = new Readability();
+      readable.setSkipLevel(3);
+      saxParser(document.childNodes[document.childNodes.length - 1], readable);
+      var article = readable.getArticle();
 
+      //Hack because article.hmtl is a string
+      var pseudo = window.document.createElement('div');
+      pseudo.innerHTML = article.html;
+      return pseudo;
+  }
 
   function select() {
     var text = window.getSelection().toString();
@@ -1054,45 +1065,15 @@
       init(text);
       window.getSelection().removeAllRanges();
     } else {
-      selectMode();
+        selectMode();
     }
   }
   
-    var readability_token = '172b057cd7cfccf27b60a36f16b1acde12783893';
-
-    function readibility_select(){
-        var url = document.URL;
-
-        $.getJSON("https://www.readability.com/api/content/v1/parser?url="+ url +"&token=" + readability_token +"&callback=?",
-        function (data) {
-
-            if(data.error){
-                alert("Article extraction failed. Try selecting text instead.");
-                return;
-            }
-
-            var div = document.createElement("DIV");
-
-            var title = "";
-            if(data.title !== ""){
-                title = ["<H1>", data.title, "</H1>"].join("");
-            }
-
-            var author = "";
-            if(data.author !== null){
-                author = ["<H2>By ", data.author, "</H2>"].join("");
-            }
-        
-            var author_title = [title, author].join("");
-            
-            div.innerHTML = [ author_title, jQuery(data.content).html() ].join("");
-        
-            init(div);
-            
-            
-        }).error(function() { alert("Article extraction failed. Try selecting text instead."); });
-
-    }
+  function scrape_article()
+  {
+     var article = scrape();
+     init(article);
+  }
   
   window.jetzt = {
     selectMode: selectMode
@@ -1114,11 +1095,13 @@
 
 
   window.addEventListener("keydown", function (ev) {
-    if (!instructions && ev.altKey && ev.keyCode === 82) {
+   
+    if (!instructions && ev.altKey && ev.keyCode === 82) { ///ALT-R for scrape
       ev.preventDefault();
-      readibility_select();
+      scrape_article();
     }
-    if (!instructions && ev.altKey && ev.keyCode === 83) {
+    
+   if (!instructions && ev.altKey && ev.keyCode === 83) { ///ALT-S as before
       ev.preventDefault();
       select();
     }
