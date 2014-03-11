@@ -12,6 +12,7 @@ Remember to pull every now and then for bugfixes and new features.
 
 - New! Automatically generate a local summary and display that with `alt`-`r` (this was done by h0ru5 I just added the new key stroke as he had an ugly confirm() box)
 - Tim Scarfe's preferred visual style
+- I have enabled h0ru5s heading display using symbols ^,*,|,> for headings 1->4
 
 ### Usage
 
