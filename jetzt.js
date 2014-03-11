@@ -1093,15 +1093,14 @@ var wraps = {
     , select: select
   };
 
-
   window.addEventListener("keydown", function (ev) {
-   
-    if (!instructions && ev.altKey && ev.keyCode === 82) { ///ALT-R for scrape
+   //ALT-A for article scrape
+    if (!instructions && ev.altKey && ev.keyCode === 65) { 
       ev.preventDefault();
       scrape_article();
     }
-    
-   if (!instructions && ev.altKey && ev.keyCode === 83) { ///ALT-S as before
+    //ALT-S as before
+    if (!instructions && ev.altKey && ev.keyCode === 83) { 
       ev.preventDefault();
       select();
     }
