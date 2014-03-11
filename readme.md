@@ -8,6 +8,11 @@ This is very much beta software so a proper chrome extension package is not curr
 
 Remember to pull every now and then for bugfixes and new features.
 
+### In This Fork (Tim Scarfe)
+
+- New! Automatically generate a local summary and display that with `alt`-`r` (this was done by h0ru5 I just added the new key stroke as he had an ugly confirm() box)
+- Tim Scarfe's preferred visual style
+
 ### Usage
 
 Control is currently keyboard-only.
@@ -25,6 +30,9 @@ Control is currently keyboard-only.
 - Close with escape.
 
 - Switch between light/dark themes with `0`
+
+
+
 
 ### Online Demo
 
