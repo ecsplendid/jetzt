@@ -8,11 +8,19 @@ This is very much beta software so a proper chrome extension package is not curr
 
 Remember to pull every now and then for bugfixes and new features.
 
+### In This Fork
+
+- Uses Tim's preferred style (main change on black) also more opaque background
+- h0ru5's local parsing code, only enabled through `alt`-`r`
+- h0ru5's local heading code, enabled to work for h1-4 using symbols ^*|>
+
 ### Usage
 
 Control is currently keyboard-only.
 
 - Initiate jetzt by pressing `alt`-`s` and clicking on the block of text you wish to read. Alternatively, select some text before pressing `alt`-`s`.
+
+- Initiate jetzt by pressing `alt`-`r` and it will automatically generate a local "readability" summary and display that instead. This means you don't need to select text in any way.
 
 - Change size with `+`/`-`.
 
