@@ -1094,7 +1094,11 @@ var wraps = {
   };
 
   window.addEventListener("keydown", function (ev) {
+<<<<<<< HEAD
    //ALT-A for scrape
+=======
+   //ALT-A for article scrape
+>>>>>>> OpenDislexicFont
     if (!instructions && ev.altKey && ev.keyCode === 65) { 
       ev.preventDefault();
       scrape_article();
