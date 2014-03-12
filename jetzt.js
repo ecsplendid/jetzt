@@ -22,6 +22,8 @@
 
 */
 
+var wordPattern = /[A-Za-z0-9\-]+/;
+
 (function (window) {
   "use strict";
 
@@ -589,7 +591,13 @@ var wraps = {
 
   // calculate the focal character index
   function calculatePivot (word) {
-    var l = word.length;
+  
+   if( !wordPattern.test(word) ) return 0;
+  
+   /// exclude punctuation
+   var parsedWord = word.match(wordPattern)[0].toLowerCase();
+  
+    var l = parsedWord.length;
     if (l < 2) {
       return 0;
     } else if (l < 6) {
@@ -704,6 +712,8 @@ var wraps = {
 
     this.setWord = function (token) {
       var pivot = calculatePivot(token);
+      
+      
       leftWord.innerHTML = token.substr(0, pivot);
       pivotChar.innerHTML = token.substr(pivot, 1);
       rightWord.innerHTML = token.substr(pivot + 1);
@@ -757,7 +767,6 @@ var wraps = {
           mul = 2;
       }
       
-      var wordPattern = /[A-Za-z0-9\-]+/;
       var parsedWord = instr.token.match(wordPattern)[0].toLowerCase();
       
       if( common_words_hashmap[parsedWord] && parsedWord.length < 6  )
@@ -771,8 +780,6 @@ var wraps = {
   
   function hightlightPreparation(token)
   {
-    var wordPattern = /[A-Za-z0-9\-]+/;
-  
     if( wordPattern.test( token ) )
     {
         var newToken = token.match( wordPattern )[0];
@@ -1112,6 +1119,7 @@ var wraps = {
   function scrape_article()
   {
      var article = scrape();
+     ParseDomTextTree();
      init(article);
   }
   
@@ -1142,6 +1150,11 @@ var wraps = {
     }
     //ALT-S as before
     if (!instructions && ev.altKey && ev.keyCode === 83) { 
+      ev.preventDefault();
+      select();
+    }
+    //ALT-X for scrape+textselect
+    if (!instructions && ev.altKey && ev.keyCode === 88) { 
       ev.preventDefault();
       ParseDomTextTree();
       select();
@@ -1187,9 +1200,9 @@ function ParseDomTextTree()
 
         for( var w=0;w<words.length;w++)
         {
-            var isword = /[A-Za-z0-9\-]+/;
+            
             var raw_word = words[w];
-            var parsed_word = raw_word.match( isword );
+            var parsed_word = raw_word.match( wordPattern );
             
             if( parsed_word != null )
             {
