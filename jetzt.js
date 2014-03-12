@@ -1136,11 +1136,17 @@ var wraps = {
                 article.className = "float-article in";
                 document.body.appendChild(article);
              }
-    }
-    else article.className += " in";
+             
+             ParseDomTextTree( article );
+        }
+        else article.className += " in";
     }
     
-    ParseDomTextTree( float_window ? article : document.body );
+    else 
+    {
+        article = scrape();
+        ParseDomTextTree( document.body );
+    }
     
     init(article);
   }
@@ -1201,7 +1207,8 @@ var domtree_root = null;
 
 function ParseDomTextTree(where)
 {
-    if( domtreetext_parsed == where ) return;
+    if( domtreetext_parsed != null &&
+        domtreetext_parsed != where ) return alert("Reload the page if you want to switch between ALT-Z and ALT-A");
     
     domtree_root = where;
     
