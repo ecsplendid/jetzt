@@ -480,10 +480,12 @@ var wraps = {
   // convert raw text into instructions
   function parseText (text,$instructionator) {
 
-    ///pre-process single quotes
-    text = text.replace( /['’](?=[st]|nt|es)/, "@|@" )
+    console.log(text)
   
-    var tokens = text.match(/["‘’'“”\(\)\/–—]|--+|\n+|([^\s"“”‘’'\(\)\/–—])+/g);
+    ///pre-process single quotes
+    text = text.replace( /['’](?=[st]|nt|es)/gi, "@|@" )
+  
+    var tokens = text.match(/["“”‘’'\(\)\/–—]|--+|\n+|([^\s"“”‘’'\(\)\/–—])+/g);
 
     var $ = ($instructionator) ? $instructionator :  new Instructionator();
 
