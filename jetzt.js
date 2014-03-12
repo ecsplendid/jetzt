@@ -1101,7 +1101,7 @@ var wraps = {
   
   function scrape() {
       var readable = new Readability();
-      readable.setSkipLevel(3);
+      readable.setSkipLevel(2);
       saxParser(document.childNodes[document.childNodes.length - 1], readable);
       var article = readable.getArticle();
 
@@ -1125,22 +1125,22 @@ var wraps = {
   
   function scrape_article(float_window)
   {
-    if( article == null )
+    if( float_window )
     {
-         article = scrape();
-         
-         if( float_window )
-         {
-            article.className = "float-article in";
-            document.body.appendChild(article);
-         }
-     
-        ParseDomTextTree( float_window ? article : document.body );
+        if( article == null )
+        {
+             article = scrape();
+             
+             if( float_window )
+             {
+                article.className = "float-article in";
+                document.body.appendChild(article);
+             }
     }
     else article.className += " in";
+    }
     
-   
-    
+    ParseDomTextTree( float_window ? article : document.body );
     
     init(article);
   }
@@ -1196,12 +1196,12 @@ var span_words = [];
 var node_wordmap = [];
 var key_prefix = "wk_";
 
-var domtreetext_parsed = false;
+var domtreetext_parsed = null;
 var domtree_root = null;
 
 function ParseDomTextTree(where)
 {
-    if( domtreetext_parsed ) return;
+    if( domtreetext_parsed == where ) return;
     
     domtree_root = where;
     
@@ -1272,7 +1272,7 @@ function ParseDomTextTree(where)
         tnode.parentNode.appendChild(div);
     }
     
-    domtreetext_parsed = true;
+    domtreetext_parsed = where;
 }
 
 var last_highlight = null;

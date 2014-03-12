@@ -49,17 +49,13 @@
   transition: top 0.34s ease;
 }
 
-.float-article li,.float-article ol
+.float-article  h1, .float-article  h2, .float-article  h3, .float-article  h4
 {
- list-style-type: square;
- list-style-position: outside;
-}
-
-.float-article > h1, h2, h3, h4
-{
- margin: 1em;
+ margin: 1em 0em;
  font-weight: bold;
- font-size: 30px;
+ background-color: ccc;
+ padding: 1em;
+ font-size: 20px;
 }
 
 .float-article.in
@@ -67,7 +63,7 @@
  top: 10px;
 }
 
-.float-article p
+.float-article p, .float-article div
 {
     text-align: justify;
     width: 400px;
