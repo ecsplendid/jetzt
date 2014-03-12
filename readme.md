@@ -13,6 +13,7 @@
 - It also displays single quote wrappings, detects when a single quote should be part of the word and then displays it.
 - Improved black colour scheme
 - Open dyslexic font (I think this would improve anyone's reading speed)
+- Headings symbols are displayed
 
 ### Installation
 
