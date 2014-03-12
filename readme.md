@@ -2,18 +2,16 @@
 
 *jetzt* is a speed-reader extension for [chrome](http://google.com/chrome) inspired by [Spritz](http://www.spritzinc.com/).
 
-### HIGHLIGHTING CURRENT WORD
+### Tim Scarfe's Branch
 
-This version implements an alpha of highlighting the current word (see https://www.youtube.com/watch?v=jebPFbVdmTw). 
-
-This can be done with `ALT`-`R` (article scraping) and the document will be highlighted in the background. `ALT`-`Z` will bring up a scrolling content window. `ALT`-`X` (selection mode with content highlighting). The old `ALT`-`S` is as it was. 
-
-A lot more work is needed to clean this up. Because of how I manipulate the underlying document, it can make it render differently :(
-
-### ALSO IN THIS VERSION
-
-- If the word is a commonly used english word and less than 6 chars, I reduce the delay time
+- This version implements an alpha of highlighting the current word (see https://www.youtube.com/watch?v=jebPFbVdmTw). This can be done with `ALT`-`R` (article scraping) and the document will be highlighted in the background. `ALT`-`Z` will bring up a scrolling content window. `ALT`-`X` (selection mode with content highlighting). The old `ALT`-`S` is as it was. A lot more work is needed to clean this up. Because of how I manipulate the underlying document, it can make it render differently :(
+- If the word is a commonly used english word and less than 6 chars, I reduce the delay time as a function of how common it is
 - Punctuation doesn't influence the pivot
+- Punctuation is highlighted
+- Punctuation color set by .punctuation in css
+- Fixes issue where you get punctionation-only displayed for words i.e. "."
+- It also displays single quote wrappings, detects when a single quote should be part of the word and then displays it.
+
 
 ### Installation
 
