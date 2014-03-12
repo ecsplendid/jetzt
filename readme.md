@@ -2,6 +2,10 @@
 
 *jetzt* is a speed-reader extension for [chrome](http://google.com/chrome) inspired by [Spritz](http://www.spritzinc.com/).
 
+### HIGHLIGHTING CURRENT WORD
+
+This version implements an alpha of highlighting the current word (see https://www.youtube.com/watch?v=K0as07PE7L0). It only works on simple documents with ALT-S. A lot more work is needed to clean this up. Because of how I manipulate the underlying document, it can make it render differently :(
+
 ### Installation
 
 This is very much beta software so a proper chrome extension package is not currently provided. Instead: clone this repository, then, in chrome, navigate to chrome://extensions , enable developer mode, click "Load unpacked extension..." and select the directory you cloned.
