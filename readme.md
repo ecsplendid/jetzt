@@ -11,7 +11,8 @@
 - Punctuation color set by .punctuation in css
 - Fixes issue where you get punctuation-only displayed for words i.e. "."
 - It also displays single quote wrappings, detects when a single quote should be part of the word and then displays it.
-
+- Improved black colour scheme
+- Open dyslexic font (I think this would improve anyone's reading speed)
 
 ### Installation
 
