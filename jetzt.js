@@ -437,7 +437,7 @@ var wraps = {
     for(var i=0;i<topnode.childNodes.length;i++) {
         node=topnode.childNodes[i];
 
-          var hpatt = /[Hh]([1234])/;
+        var hpatt = /[Hh]([1234])/;
 
         if( hpatt.test( node.nodeName ) )
         {
@@ -483,7 +483,7 @@ var wraps = {
     ///pre-process single quotes
     text = text.replace( /['’](?=[st]|nt|es|cause|em|cept|tis|re|\d{2})/gi, "@|@" )
     ///Javascript doesnt support lookbehind assertions grr
-    text = text.replace( /s['’]/gi, "s@|@" )
+    text = text.replace( /s['’](?=\s|\n)/gi, "s@|@" )
     
   
     var tokens = text.match(/["“”‘’'\(\)\/–—]|--+|\n+|([^\s"“”‘’'\(\)\/–—])+/g);
@@ -514,7 +514,7 @@ var wraps = {
         remove_tokens.push(i);
       }
     }
-    
+
     /// remove remaining dodgy tokens
     for (var i=remove_tokens.length-1; i>=0; i--) 
     {
