@@ -10,8 +10,8 @@ A lot more work is needed to clean this up. Because of how I manipulate the unde
 
 ### ALSO IN THIS VERSION
 
--If the word is a commonly used english word and less than 6 chars, I reduce the delay time
--Punctuation doesn't influence the pivot
+- If the word is a commonly used english word and less than 6 chars, I reduce the delay time
+- Punctuation doesn't influence the pivot
 
 ### Installation
 
