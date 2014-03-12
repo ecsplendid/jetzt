@@ -150,17 +150,17 @@ var wordPattern = /[A-Za-z0-9\-]+/;
   */
 
   var DEFAULT_OPTIONS = {
-      target_wpm: 400,
+      target_wpm: 300,
       scale: 1.5,
       dark: false,
       modifiers: {
         normal: 1,
         start_clause: 1,
-        end_clause: 1.8,
+        end_clause: 2,
         start_sentence: 1.5,
-        end_sentence: 2.5,
+        end_sentence: 3,
         start_paragraph: 2.0,
-        end_paragraph: 2.8,
+        end_paragraph: 2,
         short_space: 1.5,
         long_space: 2.2
       }
@@ -437,7 +437,7 @@ var wraps = {
     for(var i=0;i<topnode.childNodes.length;i++) {
         node=topnode.childNodes[i];
 
-          var hpatt = /[Hh]([1234])/;
+        var hpatt = /[Hh]([1234])/;
 
         if( hpatt.test( node.nodeName ) )
         {
@@ -481,9 +481,12 @@ var wraps = {
   function parseText (text,$instructionator) {
 
     ///pre-process single quotes
-    text = text.replace( /['’](?=[st]|nt|es)/, "@|@" )
+    text = text.replace( /['’](?=(([dst]|nt|es|re|ve)[\s$\n])|cause|em|cept|tis|\d{2})/gi, "@|@" )
+    ///Javascript doesnt support lookbehind assertions grr
+    text = text.replace( /s['’](?=\s|\n)/gi, "s@|@" )
+    
   
-    var tokens = text.match(/["‘’'“”\(\)\/–—]|--+|\n+|([^\s"“”‘’'\(\)\/–—])+/g);
+    var tokens = text.match(/["“”‘’'\(\)\/–—]|--+|\n+|([^\s"“”‘’'\(\)\/–—])+/g);
 
     var $ = ($instructionator) ? $instructionator :  new Instructionator();
 
@@ -498,7 +501,7 @@ var wraps = {
     for (var i=0; i<tokens.length; i++) 
     {
       var tkn = tokens[i];
-     
+      
       /// put the single quote back in
       
       tkn = tokens[i] = tkn.replace("@|@","’");
@@ -511,18 +514,19 @@ var wraps = {
         remove_tokens.push(i);
       }
     }
-    
+
     /// remove remaining dodgy tokens
     for (var i=remove_tokens.length-1; i>=0; i--) 
     {
         tokens.splice(remove_tokens[i], 1);
     }
     
+    var in_single = false;
+      
     for (var i=0; i<tokens.length; i++) 
     {
       var tkn = tokens[i];
 
-      
       
       switch (tkn) {
         case "“":
@@ -530,16 +534,33 @@ var wraps = {
           $.pushWrap(wraps.double_quote);
           $.modNext("start_clause");
           break;
+        case "'":
+            if( !in_single )
+            {
+                $.spacer();
+                $.pushWrap(wraps.single_quote);
+                $.modNext("start_clause");
+                in_single = true;
+            }
+            
+            else
+            {
+              $.spacer();
+              $.popWrap(wraps.single_quote);
+              $.modNext("end_clause");
+              in_single = false;
+            }
+          break;
         case "‘":
-          $.spacer();
-          $.pushWrap(wraps.single_quote);
-          $.modNext("start_clause");
+            $.spacer();
+            $.pushWrap(wraps.single_quote);
+            $.modNext("start_clause");
           break;
         case "’":
-          $.spacer();
-          $.popWrap(wraps.single_quote);
-          $.modNext("end_clause");
-          break;          
+            $.spacer();
+            $.popWrap(wraps.single_quote);
+            $.modNext("end_clause");    
+          break;
         case "”":
           $.popWrap(wraps.double_quote);
           $.modPrev("end_clause");
@@ -792,6 +813,9 @@ var wraps = {
   */
 
   function calculateDelay(instr) {
+  
+    var has_digits = /\d/;
+    
     var interval = 60 * 1000 / config("target_wpm");
     if (instr.modifier !== "normal") {
       return interval * modifier(instr.modifier);
@@ -819,7 +843,10 @@ var wraps = {
       var parsedWord = instr.token.match(wordPattern)[0].toLowerCase();
       
       if( common_words_hashmap[parsedWord] && parsedWord.length < 6  )
-        mul = 0.8 + ((1-common_words_hashmap[parsedWord])*0.2);
+        mul = 0.8 + ((1-common_words_hashmap[parsedWord]) * 0.2);
+      
+      /// pause a lot for numbers
+      if( has_digits.test(parsedWord) ) mul = 3;
       
       return interval * mul;
     }
@@ -1333,8 +1360,6 @@ function ParseDomTextTree(where)
 
 var last_highlight = null;
 
-var document_progression = 0;
-
 function HighlightWord( sequence )
 {
     if( node_wordmap[ key_prefix+sequence[sequence.length-1] ] == null ) return;
@@ -1342,9 +1367,6 @@ function HighlightWord( sequence )
     for( var x=0;x<node_wordmap[ key_prefix+sequence[sequence.length-1] ].length;x++ )
     {
         var span = node_wordmap[ key_prefix+sequence[sequence.length-1] ][x];
-        
-        /// hacky improvement in case it finds a word higher up the document
-        if( span.word_number < document_progression ) continue;
         
         var first_span = span;
         
@@ -1362,7 +1384,7 @@ function HighlightWord( sequence )
                     last_highlight = first_span;
                     
                     if( domtree_root == document.body ) 
-                        window.scrollTo(first_span.offsetLeft,first_span.offsetTop);
+                        window.scrollTo(first_span.offsetLeft,first_span.offsetTop- 60);
                     else domtree_root.scrollTop = first_span.offsetTop - 30;
                         
                     first_span.focus();
