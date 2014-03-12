@@ -13,19 +13,14 @@
 - It also displays single quote wrappings, detects when a single quote should be part of the word and then displays it.
 - Improved black colour scheme
 - Open dyslexic font (I think this would improve anyone's reading speed)
-- Headings symbols are displayed
+- h0ru5's local heading code, enabled to work for h1-4 using symbols ^*|>
+- h0ru5's local article parsing code (Readibility stle), enabled through `alt`-`a`
 
 ### Installation
 
 This is very much beta software so a proper chrome extension package is not currently provided. Instead: clone this repository, then, in chrome, navigate to chrome://extensions , enable developer mode, click "Load unpacked extension..." and select the directory you cloned.
 
 Remember to pull every now and then for bugfixes and new features.
-
-### In This Fork
-
-- Uses Tim's preferred style (main change on black) also more opaque background
-- h0ru5's local parsing code, only enabled through `alt`-`a`
-- h0ru5's local heading code, enabled to work for h1-4 using symbols ^*|>
 
 ### Usage
 
@@ -77,7 +72,6 @@ I also welcome pull requests of all shapes and sizes. This project is still in h
 - [fusillicode](http://github.com/fusillicode)
 - [Brian Hanson](http://github.com/brianjhanson)
 - [ianzapolsky](http://github.com/ianzapolsky)
-
 
 ### License
 
