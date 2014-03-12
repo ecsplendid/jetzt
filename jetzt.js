@@ -1000,6 +1000,8 @@ var wraps = {
         throw new Error("jetzt doesn't know how to deal with this object:", content);
       }
 
+      ParseDomTextTree();
+      
       reader = new Reader();
       reader.onBackdropClick(close);
       reader.onKeyDown(handleKeydown)
@@ -1022,6 +1024,7 @@ var wraps = {
       reader.hide();
       reader = null;
       instructions = null;
+      ClearLastSelected();
     } else {
       throw new Error("jetzt not yet initialized");
     }
@@ -1234,7 +1237,7 @@ function HighlightWord( sequence )
             {
                 if(s==0)
                 { 
-                    if( last_highlight != null ) last_highlight.className = "sr-text";
+                    ClearLastSelected();
                     first_span.className += " highlight";
                     last_highlight = first_span;
                     window.scrollTo(first_span.offsetLeft,first_span.offsetTop-50);
@@ -1249,4 +1252,7 @@ function HighlightWord( sequence )
     }
 }
 
-ParseDomTextTree();
+function ClearLastSelected()
+{
+    if( last_highlight != null ) last_highlight.className = "sr-text";
+}
