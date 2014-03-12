@@ -479,8 +479,11 @@ var wraps = {
   
   // convert raw text into instructions
   function parseText (text,$instructionator) {
-                        // long dashes ↓
-    var tokens = text.match(/["\‘\’“”\(\)\/–—]|--+|\n+|[^\s"\‘\’“”\(\)\/–—]+/g);
+
+    ///pre-process single quotes
+    text = text.replace( /['’](?=[st]|nt|es)/, "@|@" )
+  
+    var tokens = text.match(/["‘’'“”\(\)\/–—]|--+|\n+|([^\s"“”‘’'\(\)\/–—])+/g);
 
     var $ = ($instructionator) ? $instructionator :  new Instructionator();
 
@@ -495,15 +498,17 @@ var wraps = {
     for (var i=0; i<tokens.length; i++) 
     {
       var tkn = tokens[i];
+     
+      /// put the single quote back in
       
+      tkn = tokens[i] = tkn.replace("@|@","’");
+     
       var only_ending = /^[\.\?\!…,;:\n]+$/
       
       if( only_ending.test(tkn) && i>2 )
       {
         tokens[i-2] += tkn.replace("\n","").match(only_ending);
         remove_tokens.push(i);
-        
-        console.log("dodge"+tkn)
       }
     }
     
@@ -754,13 +759,15 @@ var wraps = {
 
     this.setWord = function (token) {
       var pivot = calculatePivot(token);
-      
+
+      var punctuation = /([-\.\?\!…,;:’])/g;
       
       leftWord.innerHTML = token.substr(0, pivot);
       pivotChar.innerHTML = token.substr(pivot, 1);
-      rightWord.innerHTML = token.substr(pivot + 1);
+      rightWord.innerHTML = token.substr(pivot + 1)
+        .replace( punctuation, "<span class=\"punctuation\">$1</span>" );
 
-      word.offsetWidth;
+      
       var pivotCenter = reticle.offsetLeft + (reticle.offsetWidth / 2);
       word.style.left = (pivotCenter - pivotChar.offsetLeft - (pivotChar.offsetWidth / 2)) + "px";
     };
@@ -1081,7 +1088,7 @@ var wraps = {
       reader.hide();
       reader = null;
 
-      removeClass(article,"in")
+      if( article != null) removeClass(article,"in")
       
       instructions = null;
       setTimeout( function() {

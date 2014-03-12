@@ -22,6 +22,11 @@
 
 */
 
+.sr-reader .punctuation
+{
+ color: red;
+}
+
 .float-article
 {
  font-family: Consolas, monaco, monospace;
