@@ -498,6 +498,8 @@ var wraps = {
     for (var i=0; i<tokens.length; i++) 
     {
       var tkn = tokens[i];
+      
+      console.log(tkn)
      
       /// put the single quote back in
       
@@ -518,11 +520,12 @@ var wraps = {
         tokens.splice(remove_tokens[i], 1);
     }
     
+    var in_single = false;
+      
     for (var i=0; i<tokens.length; i++) 
     {
       var tkn = tokens[i];
 
-      
       
       switch (tkn) {
         case "“":
@@ -530,16 +533,33 @@ var wraps = {
           $.pushWrap(wraps.double_quote);
           $.modNext("start_clause");
           break;
+        case "'":
+            if( !in_single )
+            {
+                $.spacer();
+                $.pushWrap(wraps.single_quote);
+                $.modNext("start_clause");
+                in_single = true;
+            }
+            
+            else
+            {
+              $.spacer();
+              $.popWrap(wraps.single_quote);
+              $.modNext("end_clause");
+              in_single = false;
+            }
+          break;
         case "‘":
-          $.spacer();
-          $.pushWrap(wraps.single_quote);
-          $.modNext("start_clause");
+            $.spacer();
+            $.pushWrap(wraps.single_quote);
+            $.modNext("start_clause");
           break;
         case "’":
-          $.spacer();
-          $.popWrap(wraps.single_quote);
-          $.modNext("end_clause");
-          break;          
+            $.spacer();
+            $.popWrap(wraps.single_quote);
+            $.modNext("end_clause");    
+          break;
         case "”":
           $.popWrap(wraps.double_quote);
           $.modPrev("end_clause");
