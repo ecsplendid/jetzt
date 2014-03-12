@@ -481,7 +481,7 @@ var wraps = {
   function parseText (text,$instructionator) {
 
     ///pre-process single quotes
-    text = text.replace( /['’](?=[st]|nt|es)/gi, "@|@" )
+    text = text.replace( /['’](?=[st]|nt|es|cause|em|cept|tis|re|\d{2})/gi, "@|@" )
     ///Javascript doesnt support lookbehind assertions grr
     text = text.replace( /s['’]/gi, "s@|@" )
     
@@ -843,7 +843,7 @@ var wraps = {
       var parsedWord = instr.token.match(wordPattern)[0].toLowerCase();
       
       if( common_words_hashmap[parsedWord] && parsedWord.length < 6  )
-        mul = 0.8 + ((1-common_words_hashmap[parsedWord])*0.2);
+        mul = 0.8 + ((1-common_words_hashmap[parsedWord]) * 0.2);
       
       /// pause a lot for numbers
       if( has_digits.test(parsedWord) ) mul = 3;
