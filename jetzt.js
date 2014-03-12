@@ -624,8 +624,10 @@ var wraps = {
         ]);
 
     hiddenInput.onkeyup = hiddenInput.onkeypress = function (ev) {
-      ev.stopImmediatePropagation();
-      return false;
+        if(!ev.ctrlKey && !ev.metaKey) {
+          ev.stopImmediatePropagation();
+          return false;
+        }
     };
 
     var grabFocus = function () {
@@ -756,6 +758,26 @@ var wraps = {
     }
   }
 
+  var previousWords = [];
+  
+  function hightlightPreparation(token)
+  {
+    var wordPattern = /[A-Za-z0-9\-]+/;
+  
+    if( wordPattern.test( token ) )
+    {
+        var newToken = token.match( wordPattern )[0];
+    
+        /// insert and truncate
+        previousWords.unshift( newToken );
+        if( previousWords.length > 3 ) previousWords.length = 3;
+        
+        HighlightWord( previousWords.reverse() );
+        
+        previousWords.reverse();
+    }
+  }
+  
   function updateReader (instr) {
     if (typeof instr === "undefined") {
       if (index < instructions.length) {
@@ -764,6 +786,9 @@ var wraps = {
         instr = instructions[instructions.length - 1];
       }
     }
+    
+    hightlightPreparation(instr.token);
+    
     reader.setWord(instr.token);
     reader.setWrap(instr.leftWrap, instr.rightWrap);
     reader.setProgress(100 * (index / instructions.length));
@@ -900,6 +925,9 @@ var wraps = {
   };
 
   function handleKeydown (ev) {
+    if(ev.ctrlKey || ev.metaKey) {
+        return;
+     } 
     var killEvent = function () {
       ev.preventDefault();
       ev.stopImmediatePropagation();
@@ -954,6 +982,7 @@ var wraps = {
    * content being either a dom node, a string, or some instructions.
    */
   function init (content) {
+  
     if (!instructions) {
 
       // plain string
@@ -1094,11 +1123,8 @@ var wraps = {
   };
 
   window.addEventListener("keydown", function (ev) {
-<<<<<<< HEAD
-   //ALT-A for scrape
-=======
+
    //ALT-A for article scrape
->>>>>>> OpenDislexicFont
     if (!instructions && ev.altKey && ev.keyCode === 65) { 
       ev.preventDefault();
       scrape_article();
@@ -1111,3 +1137,116 @@ var wraps = {
   });
 
 })(window);
+
+var doc_words = [];
+var text_nodes = [];
+var span_words = [];
+var node_wordmap = [];
+var key_prefix = "wk_";
+
+function ParseDomTextTree()
+{
+    doc_words = [];
+    text_nodes = [];
+    span_words = [];
+    node_wordmap = [];
+
+    var walk = document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null,false), tn;
+
+    while(tn=walk.nextNode()) 
+    {
+        text_nodes.push(tn);
+    }
+
+    var id_map = 0;
+    var lastWord = null;
+    
+    for( var x=0;x<text_nodes.length;x++ )
+    {
+        var tnode = text_nodes[x];
+        
+        var words = tnode.nodeValue.split(" ");
+        tnode.nodeValue = "";
+        var div = document.createElement("div");
+
+        for( var w=0;w<words.length;w++)
+        {
+            var isword = /[A-Za-z0-9\-]+/;
+            var raw_word = words[w];
+            var parsed_word = raw_word.match( isword );
+            
+            if( parsed_word != null )
+            {
+                doc_words.push(parsed_word);
+                
+                var span = document.createElement("span");
+                span.innerHTML = raw_word;
+                span.lastWord = lastWord;
+                span.className = "sr-text";
+                span.parsedWord = parsed_word;
+                span.id = ["word_map_",id_map++].join("");   
+                div.appendChild(span);
+                
+                var span_space = document.createElement("span");
+                span_space.className = "sr-text";
+                span_space.innerHTML = " ";
+                div.appendChild(span_space);
+                
+                
+                span_words[parsed_word] = span.id;
+                lastWord = span;
+                
+                /// amazingly, seems in chrome "some" is a special key on all associative arrays?!
+                /// we will just prefix it
+                var key = [key_prefix,parsed_word].join("");
+                
+                if( !node_wordmap[key] ) 
+                {
+                    node_wordmap[key] = [];
+                }
+                
+                node_wordmap[key].push(span);
+            }
+        }  
+             
+        tnode.parentNode.appendChild(div);
+    }
+}
+
+var last_highlight = null;
+
+function HighlightWord( sequence )
+{
+    if( node_wordmap[ key_prefix+sequence[sequence.length-1] ] == null ) return;
+    
+    for( var x=0;x<node_wordmap[ key_prefix+sequence[sequence.length-1] ].length;x++ )
+    {
+        var span = node_wordmap[ key_prefix+sequence[sequence.length-1] ][x];
+    
+        var first_span = span;
+        
+        /// go backwards through sequence and confirm all the previous words match
+        for( var s=sequence.length-1;s>=0;s-- )
+        {
+            if( span.parsedWord != null
+                && span.lastWord != null
+                && sequence[s] == span.parsedWord )
+            {
+                if(s==0)
+                { 
+                    if( last_highlight != null ) last_highlight.className = "sr-text";
+                    first_span.className += " highlight";
+                    last_highlight = first_span;
+                    window.scrollTo(first_span.offsetLeft,first_span.offsetTop-50);
+                    
+                    return null;
+                }
+                
+                span = span.lastWord;
+            }
+            else break;
+        }
+    }
+}
+
+ParseDomTextTree();
