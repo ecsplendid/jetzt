@@ -150,17 +150,17 @@ var wordPattern = /[A-Za-z0-9\-]+/;
   */
 
   var DEFAULT_OPTIONS = {
-      target_wpm: 400,
+      target_wpm: 300,
       scale: 1.5,
       dark: false,
       modifiers: {
         normal: 1,
         start_clause: 1,
-        end_clause: 1.8,
+        end_clause: 2,
         start_sentence: 1.5,
-        end_sentence: 2.5,
+        end_sentence: 3,
         start_paragraph: 2.0,
-        end_paragraph: 2.8,
+        end_paragraph: 2,
         short_space: 1.5,
         long_space: 2.2
       }
@@ -813,6 +813,9 @@ var wraps = {
   */
 
   function calculateDelay(instr) {
+  
+    var has_digits = /\d/;
+    
     var interval = 60 * 1000 / config("target_wpm");
     if (instr.modifier !== "normal") {
       return interval * modifier(instr.modifier);
@@ -841,6 +844,9 @@ var wraps = {
       
       if( common_words_hashmap[parsedWord] && parsedWord.length < 6  )
         mul = 0.8 + ((1-common_words_hashmap[parsedWord])*0.2);
+      
+      /// pause a lot for numbers
+      if( has_digits.test(parsedWord) ) mul = 3;
       
       return interval * mul;
     }
