@@ -668,6 +668,8 @@ var wraps = {
 
 
     this.hide = function (cb) {
+    
+      ResetDocumentProgression();
       hiddenInput.onblur = null;
       hiddenInput.blur();
       removeClass(backdrop, "in");
@@ -704,7 +706,7 @@ var wraps = {
       var pivot = calculatePivot(token);
       leftWord.innerHTML = token.substr(0, pivot);
       pivotChar.innerHTML = token.substr(pivot, 1);
-      rightWord.innerHTML = token.substr(pivot + 1)
+      rightWord.innerHTML = token.substr(pivot + 1);
 
       word.offsetWidth;
       var pivotCenter = reticle.offsetLeft + (reticle.offsetWidth / 2);
@@ -754,6 +756,13 @@ var wraps = {
         case 13:
           mul = 2;
       }
+      
+      var wordPattern = /[A-Za-z0-9\-]+/;
+      var parsedWord = instr.token.match(wordPattern)[0].toLowerCase();
+      
+      if( common_words_hashmap[parsedWord] && parsedWord.length < 6  )
+        mul = 0.8 + ((1-common_words_hashmap[parsedWord])*0.2);
+      
       return interval * mul;
     }
   }
@@ -770,7 +779,7 @@ var wraps = {
     
         /// insert and truncate
         previousWords.unshift( newToken );
-        if( previousWords.length > 3 ) previousWords.length = 3;
+        if( previousWords.length > 4 ) previousWords.length = 4;
         
         HighlightWord( previousWords.reverse() );
         
@@ -813,6 +822,7 @@ var wraps = {
    * start and stop the reader
    */
   function toggleRunning (run) {
+    ResetDocumentProgression();
     if (run === running) return;
     if (!instructions) throw new Error("jetzt has not been initialized");
 
@@ -1000,8 +1010,6 @@ var wraps = {
         throw new Error("jetzt doesn't know how to deal with this object:", content);
       }
 
-      ParseDomTextTree();
-      
       reader = new Reader();
       reader.onBackdropClick(close);
       reader.onKeyDown(handleKeydown)
@@ -1135,6 +1143,7 @@ var wraps = {
     //ALT-S as before
     if (!instructions && ev.altKey && ev.keyCode === 83) { 
       ev.preventDefault();
+      ParseDomTextTree();
       select();
     }
   });
@@ -1147,8 +1156,12 @@ var span_words = [];
 var node_wordmap = [];
 var key_prefix = "wk_";
 
+var domtreetext_parsed = false;
+
 function ParseDomTextTree()
 {
+    if( domtreetext_parsed ) return;
+    
     doc_words = [];
     text_nodes = [];
     span_words = [];
@@ -1187,7 +1200,8 @@ function ParseDomTextTree()
                 span.lastWord = lastWord;
                 span.className = "sr-text";
                 span.parsedWord = parsed_word;
-                span.id = ["word_map_",id_map++].join("");   
+                span.id = ["word_map_",id_map++].join(""); 
+                span.word_number = id_map;
                 div.appendChild(span);
                 
                 var span_space = document.createElement("span");
@@ -1214,9 +1228,13 @@ function ParseDomTextTree()
              
         tnode.parentNode.appendChild(div);
     }
+    
+    domtreetext_parsed = true;
 }
 
 var last_highlight = null;
+
+var document_progression = 0;
 
 function HighlightWord( sequence )
 {
@@ -1225,7 +1243,10 @@ function HighlightWord( sequence )
     for( var x=0;x<node_wordmap[ key_prefix+sequence[sequence.length-1] ].length;x++ )
     {
         var span = node_wordmap[ key_prefix+sequence[sequence.length-1] ][x];
-    
+        
+        /// hacky improvement in case it finds a word higher up the document
+        if( span.word_number < document_progression ) continue;
+        
         var first_span = span;
         
         /// go backwards through sequence and confirm all the previous words match
@@ -1240,7 +1261,10 @@ function HighlightWord( sequence )
                     ClearLastSelected();
                     first_span.className += " highlight";
                     last_highlight = first_span;
+                    
                     window.scrollTo(first_span.offsetLeft,first_span.offsetTop-50);
+                    
+                    document_progression = first_span.word_number;
                     
                     return null;
                 }
@@ -1255,4 +1279,9 @@ function HighlightWord( sequence )
 function ClearLastSelected()
 {
     if( last_highlight != null ) last_highlight.className = "sr-text";
+}
+
+function ResetDocumentProgression()
+{
+    document_progression = 0;
 }

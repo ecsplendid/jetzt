@@ -32,8 +32,8 @@
 .highlight 
 {
  background-color: yellow;
+ padding: 5px;
  color: red;
- border-bottom: 1px red solid;
 }
 
 @font-face {

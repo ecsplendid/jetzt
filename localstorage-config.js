@@ -1,3 +1,4 @@
+
 (function (window) {
   "use strict";
   
@@ -28,3 +29,4 @@
     window.jetzt.setConfigBackend(configStorage);
   }
 })(window);
+
