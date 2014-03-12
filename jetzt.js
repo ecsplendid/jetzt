@@ -151,14 +151,14 @@ var wordPattern = /[A-Za-z0-9\-]+/;
 
   var DEFAULT_OPTIONS = {
       target_wpm: 400,
-      scale: 1,
+      scale: 1.5,
       dark: false,
       modifiers: {
         normal: 1,
         start_clause: 1,
         end_clause: 1.8,
-        start_sentence: 1.3,
-        end_sentence: 2.2,
+        start_sentence: 1.5,
+        end_sentence: 2.5,
         start_paragraph: 2.0,
         end_paragraph: 2.8,
         short_space: 1.5,
@@ -422,6 +422,7 @@ var wordPattern = /[A-Za-z0-9\-]+/;
 
 var wraps = {
     double_quote: {left: "“", right: "”"},
+    single_quote: {left: "‘", right: "’"},
     parens: {left: "(", right: ")"},
     heading1: {left: "^", right: ""},
     heading2: {left: "*", right: ""},
@@ -474,25 +475,66 @@ var wraps = {
     return inst.getInstructions();
   }
 
+  var lastKnownWordIndex = 0;
+  
   // convert raw text into instructions
   function parseText (text,$instructionator) {
                         // long dashes ↓
-    var tokens = text.match(/["“”\(\)\/–—]|--+|\n+|[^\s"“”\(\)\/–—]+/g);
+    var tokens = text.match(/["\‘\’“”\(\)\/–—]|--+|\n+|[^\s"\‘\’“”\(\)\/–—]+/g);
 
     var $ = ($instructionator) ? $instructionator :  new Instructionator();
 
     // doesn't handle nested double quotes, but that junk is *rare*;
     var double_quote_state = false;
 
-    for (var i=0; i<tokens.length; i++) {
+    /// hack to find lone characters (this might happen in this situation)
+    /// "offering to help you with your forthcoming appearance in parliament".
+    /// "offering to help you with your forthcoming appearance in parliament";
+    /// the temporary solution is to append it to the element 2 back
+    var remove_tokens = [];
+    for (var i=0; i<tokens.length; i++) 
+    {
+      var tkn = tokens[i];
+      
+      var only_ending = /^[\.\?\!…,;:\n]+$/
+      
+      if( only_ending.test(tkn) && i>2 )
+      {
+        tokens[i-2] += tkn.replace("\n","").match(only_ending);
+        remove_tokens.push(i);
+        
+        console.log("dodge"+tkn)
+      }
+    }
+    
+    /// remove remaining dodgy tokens
+    for (var i=remove_tokens.length-1; i>=0; i--) 
+    {
+        tokens.splice(remove_tokens[i], 1);
+    }
+    
+    for (var i=0; i<tokens.length; i++) 
+    {
       var tkn = tokens[i];
 
+      
+      
       switch (tkn) {
         case "“":
           $.spacer();
           $.pushWrap(wraps.double_quote);
           $.modNext("start_clause");
           break;
+        case "‘":
+          $.spacer();
+          $.pushWrap(wraps.single_quote);
+          $.modNext("start_clause");
+          break;
+        case "’":
+          $.spacer();
+          $.popWrap(wraps.single_quote);
+          $.modNext("end_clause");
+          break;          
         case "”":
           $.popWrap(wraps.double_quote);
           $.modPrev("end_clause");
@@ -536,7 +578,7 @@ var wraps = {
           } else if (tkn.match(/\n+/)) {
             if (tkn.length > 1
                 // hack for linefeed-based word wrapping. Ugly. So ugly.
-                || (i > 0 && tokens[i - 1].match(/[.?!…'"”]+$/))) {
+                || (i > 0 && tokens[i - 1].match(/[.?!…'"”‘’]+$/))) {
 
               $.clearWrap();
               $.modPrev("end_paragraph");
