@@ -9,7 +9,7 @@
 - Punctuation doesn't influence the pivot
 - Punctuation is highlighted
 - Punctuation color set by .punctuation in css
-- Fixes issue where you get punctionation-only displayed for words i.e. "."
+- Fixes issue where you get punctuation-only displayed for words i.e. "."
 - It also displays single quote wrappings, detects when a single quote should be part of the word and then displays it.
 
 
