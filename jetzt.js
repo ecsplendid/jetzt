@@ -22,6 +22,8 @@
 
 */
 
+var wordPattern = /[A-Za-z0-9\-]+/;
+
 (function (window) {
   "use strict";
 
@@ -149,14 +151,14 @@
 
   var DEFAULT_OPTIONS = {
       target_wpm: 400,
-      scale: 1,
+      scale: 1.5,
       dark: false,
       modifiers: {
         normal: 1,
         start_clause: 1,
         end_clause: 1.8,
-        start_sentence: 1.3,
-        end_sentence: 2.2,
+        start_sentence: 1.5,
+        end_sentence: 2.5,
         start_paragraph: 2.0,
         end_paragraph: 2.8,
         short_space: 1.5,
@@ -418,10 +420,14 @@
     };
   }
 
-  var wraps = {
+var wraps = {
     double_quote: {left: "“", right: "”"},
+    single_quote: {left: "‘", right: "’"},
     parens: {left: "(", right: ")"},
-    heading1: {left: "H1", right: ""}
+    heading1: {left: "^", right: ""},
+    heading2: {left: "*", right: ""},
+    heading3: {left: "|", right: ""},
+    heading4: {left: ">", right: ""}
   };
 
   function parseDom(topnode,$instructionator) {
@@ -431,58 +437,109 @@
     for(var i=0;i<topnode.childNodes.length;i++) {
         node=topnode.childNodes[i];
 
-        //TODO add modifiers, e.g. based on node.nodeName
-        switch(node.nodeName) {
-          case "H1":
-            //commented out until view for headings is implemented    
-            //inst.pushWrap(wraps.heading1);
+          var hpatt = /[Hh]([1234])/;
+
+        if( hpatt.test( node.nodeName ) )
+        {
+            inst.pushWrap(wraps[ ["heading", node.nodeName.match(hpatt)[1] ].join("") ]);
             inst.modNext("start_paragraph");
             parseDom(node,inst);
             inst.spacer();
             inst.clearWrap();
             inst.modPrev("end_paragraph");
-            break;
-          case "SCRIPT":
-            break;
-          case "#text":
-            if(node.textContent.trim().length > 0) parseText(node.textContent.trim(),inst);
-            break;
-          case "P":
-            inst.clearWrap();
-            inst.modNext("start_paragraph");
-            parseDom(node, inst)
-            inst.modPrev("end_paragraph");
-            inst.clearWrap();
-            break;
-          case "#comment":
-            break;
-          default:
-            parseDom(node,inst);
+        }
+        else
+        {
+            //TODO add modifiers, e.g. based on node.nodeName
+            switch(node.nodeName) {
+              case "SCRIPT":
+                break;
+              case "#text":
+                if(node.textContent.trim().length > 0) parseText(node.textContent.trim(),inst);
+                break;
+              case "P":
+                inst.clearWrap();
+                inst.modNext("start_paragraph");
+                parseDom(node, inst)
+                inst.modPrev("end_paragraph");
+                inst.clearWrap();
+                break;
+              case "#comment":
+                break;
+              default:
+                parseDom(node,inst);
+            }
         }
     }
 
     return inst.getInstructions();
   }
 
+  var lastKnownWordIndex = 0;
+  
   // convert raw text into instructions
   function parseText (text,$instructionator) {
-                        // long dashes ↓
-    var tokens = text.match(/["“”\(\)\/–—]|--+|\n+|[^\s"“”\(\)\/–—]+/g);
+
+    ///pre-process single quotes
+    text = text.replace( /['’](?=[st]|nt|es)/, "@|@" )
+  
+    var tokens = text.match(/["‘’'“”\(\)\/–—]|--+|\n+|([^\s"“”‘’'\(\)\/–—])+/g);
 
     var $ = ($instructionator) ? $instructionator :  new Instructionator();
 
     // doesn't handle nested double quotes, but that junk is *rare*;
     var double_quote_state = false;
 
-    for (var i=0; i<tokens.length; i++) {
+    /// hack to find lone characters (this might happen in this situation)
+    /// "offering to help you with your forthcoming appearance in parliament".
+    /// "offering to help you with your forthcoming appearance in parliament";
+    /// the temporary solution is to append it to the element 2 back
+    var remove_tokens = [];
+    for (var i=0; i<tokens.length; i++) 
+    {
+      var tkn = tokens[i];
+     
+      /// put the single quote back in
+      
+      tkn = tokens[i] = tkn.replace("@|@","’");
+     
+      var only_ending = /^[\.\?\!…,;:\n]+$/
+      
+      if( only_ending.test(tkn) && i>2 )
+      {
+        tokens[i-2] += tkn.replace("\n","").match(only_ending);
+        remove_tokens.push(i);
+      }
+    }
+    
+    /// remove remaining dodgy tokens
+    for (var i=remove_tokens.length-1; i>=0; i--) 
+    {
+        tokens.splice(remove_tokens[i], 1);
+    }
+    
+    for (var i=0; i<tokens.length; i++) 
+    {
       var tkn = tokens[i];
 
+      
+      
       switch (tkn) {
         case "“":
           $.spacer();
           $.pushWrap(wraps.double_quote);
           $.modNext("start_clause");
           break;
+        case "‘":
+          $.spacer();
+          $.pushWrap(wraps.single_quote);
+          $.modNext("start_clause");
+          break;
+        case "’":
+          $.spacer();
+          $.popWrap(wraps.single_quote);
+          $.modNext("end_clause");
+          break;          
         case "”":
           $.popWrap(wraps.double_quote);
           $.modPrev("end_clause");
@@ -526,7 +583,7 @@
           } else if (tkn.match(/\n+/)) {
             if (tkn.length > 1
                 // hack for linefeed-based word wrapping. Ugly. So ugly.
-                || (i > 0 && tokens[i - 1].match(/[.?!…'"”]+$/))) {
+                || (i > 0 && tokens[i - 1].match(/[.?!…'"”‘’]+$/))) {
 
               $.clearWrap();
               $.modPrev("end_paragraph");
@@ -581,7 +638,13 @@
 
   // calculate the focal character index
   function calculatePivot (word) {
-    var l = word.length;
+  
+   if( !wordPattern.test(word) ) return 0;
+  
+   /// exclude punctuation
+   var parsedWord = word.match(wordPattern)[0].toLowerCase();
+  
+    var l = parsedWord.length;
     if (l < 2) {
       return 0;
     } else if (l < 6) {
@@ -616,8 +679,10 @@
         ]);
 
     hiddenInput.onkeyup = hiddenInput.onkeypress = function (ev) {
-      ev.stopImmediatePropagation();
-      return false;
+        if(!ev.ctrlKey && !ev.metaKey) {
+          ev.stopImmediatePropagation();
+          return false;
+        }
     };
 
     var grabFocus = function () {
@@ -658,6 +723,8 @@
 
 
     this.hide = function (cb) {
+    
+      ResetDocumentProgression();
       hiddenInput.onblur = null;
       hiddenInput.blur();
       removeClass(backdrop, "in");
@@ -692,11 +759,15 @@
 
     this.setWord = function (token) {
       var pivot = calculatePivot(token);
+
+      var punctuation = /([-\.\?\!…,;:’])/g;
+      
       leftWord.innerHTML = token.substr(0, pivot);
       pivotChar.innerHTML = token.substr(pivot, 1);
       rightWord.innerHTML = token.substr(pivot + 1)
+        .replace( punctuation, "<span class=\"punctuation\">$1</span>" );
 
-      word.offsetWidth;
+      
       var pivotCenter = reticle.offsetLeft + (reticle.offsetWidth / 2);
       word.style.left = (pivotCenter - pivotChar.offsetLeft - (pivotChar.offsetWidth / 2)) + "px";
     };
@@ -744,10 +815,34 @@
         case 13:
           mul = 2;
       }
+      
+      var parsedWord = instr.token.match(wordPattern)[0].toLowerCase();
+      
+      if( common_words_hashmap[parsedWord] && parsedWord.length < 6  )
+        mul = 0.8 + ((1-common_words_hashmap[parsedWord])*0.2);
+      
       return interval * mul;
     }
   }
 
+  var previousWords = [];
+  
+  function hightlightPreparation(token)
+  {
+    if( wordPattern.test( token ) )
+    {
+        var newToken = token.match( wordPattern )[0];
+    
+        /// insert and truncate
+        previousWords.unshift( newToken );
+        if( previousWords.length > 4 ) previousWords.length = 4;
+        
+        HighlightWord( previousWords.reverse() );
+        
+        previousWords.reverse();
+    }
+  }
+  
   function updateReader (instr) {
     if (typeof instr === "undefined") {
       if (index < instructions.length) {
@@ -756,6 +851,9 @@
         instr = instructions[instructions.length - 1];
       }
     }
+    
+    hightlightPreparation(instr.token);
+    
     reader.setWord(instr.token);
     reader.setWrap(instr.leftWrap, instr.rightWrap);
     reader.setProgress(100 * (index / instructions.length));
@@ -780,6 +878,7 @@
    * start and stop the reader
    */
   function toggleRunning (run) {
+    ResetDocumentProgression();
     if (run === running) return;
     if (!instructions) throw new Error("jetzt has not been initialized");
 
@@ -892,6 +991,9 @@
   };
 
   function handleKeydown (ev) {
+    if(ev.ctrlKey || ev.metaKey) {
+        return;
+     } 
     var killEvent = function () {
       ev.preventDefault();
       ev.stopImmediatePropagation();
@@ -946,6 +1048,7 @@
    * content being either a dom node, a string, or some instructions.
    */
   function init (content) {
+  
     if (!instructions) {
 
       // plain string
@@ -984,7 +1087,13 @@
       if (running) jetzt.toggleRunning();
       reader.hide();
       reader = null;
+
+      if( article != null) removeClass(article,"in")
+      
       instructions = null;
+      setTimeout( function() {
+        ClearLastSelected();
+        }, 1000 );
     } else {
       throw new Error("jetzt not yet initialized");
     }
@@ -1038,7 +1147,18 @@
     window.addEventListener("mousemove", moveHandler);
     window.addEventListener("keydown", escHandler);
   };
+  
+  function scrape() {
+      var readable = new Readability();
+      readable.setSkipLevel(2);
+      saxParser(document.childNodes[document.childNodes.length - 1], readable);
+      var article = readable.getArticle();
 
+      //Hack because article.hmtl is a string
+      var pseudo = window.document.createElement('div');
+      pseudo.innerHTML = article.html;
+      return pseudo;
+  }
 
   function select() {
     var text = window.getSelection().toString();
@@ -1046,11 +1166,40 @@
       init(text);
       window.getSelection().removeAllRanges();
     } else {
-      selectMode();
+        selectMode();
     }
   }
-
-
+  
+  var article = null;
+  
+  function scrape_article(float_window)
+  {
+    if( float_window )
+    {
+        if( article == null )
+        {
+             article = scrape();
+             
+             if( float_window )
+             {
+                article.className = "float-article in";
+                document.body.appendChild(article);
+             }
+             
+             ParseDomTextTree( article );
+        }
+        else article.className += " in";
+    }
+    
+    else 
+    {
+        article = scrape();
+        ParseDomTextTree( document.body );
+    }
+    
+    init(article);
+  }
+  
   window.jetzt = {
     selectMode: selectMode
     , init: init
@@ -1069,12 +1218,173 @@
     , select: select
   };
 
-
   window.addEventListener("keydown", function (ev) {
-    if (!instructions && ev.altKey && ev.keyCode === 83) {
+
+   //ALT-A for article scrape
+    if (!instructions && ev.altKey && ev.keyCode === 65) { 
       ev.preventDefault();
+      scrape_article(false);
+    }
+    //ALT-Z for article scrape with content window
+    if (!instructions && ev.altKey && ev.keyCode === 90) { 
+      ev.preventDefault();
+      scrape_article(true);
+    }
+    //ALT-S as before
+    if (!instructions && ev.altKey && ev.keyCode === 83) { 
+      ev.preventDefault();
+      select();
+    }
+    //ALT-X for scrape+textselect
+    if (!instructions && ev.altKey && ev.keyCode === 88) { 
+      ev.preventDefault();
+      ParseDomTextTree(document.body);
       select();
     }
   });
 
 })(window);
+
+var doc_words = [];
+var text_nodes = [];
+var span_words = [];
+var node_wordmap = [];
+var key_prefix = "wk_";
+
+var domtreetext_parsed = null;
+var domtree_root = null;
+
+function ParseDomTextTree(where)
+{
+    if( domtreetext_parsed != null &&
+        domtreetext_parsed != where ) return alert("Reload the page if you want to switch between ALT-Z and ALT-A");
+    
+    domtree_root = where;
+    
+    doc_words = [];
+    text_nodes = [];
+    span_words = [];
+    node_wordmap = [];
+
+    var walk = document.createTreeWalker(where,NodeFilter.SHOW_TEXT,null,false), tn;
+
+    while(tn=walk.nextNode()) 
+    {
+        text_nodes.push(tn);
+    }
+
+    var id_map = 0;
+    var lastWord = null;
+    
+    for( var x=0;x<text_nodes.length;x++ )
+    {
+        var tnode = text_nodes[x];
+        
+        var words = tnode.nodeValue.split(" ");
+        tnode.nodeValue = "";
+        var div = document.createElement("div");
+
+        for( var w=0;w<words.length;w++)
+        {
+            
+            var raw_word = words[w];
+            var parsed_word = raw_word.match( wordPattern );
+            
+            if( parsed_word != null )
+            {
+                doc_words.push(parsed_word);
+                
+                var span = document.createElement("span");
+                span.innerHTML = raw_word;
+                span.lastWord = lastWord;
+                span.className = "sr-text";
+                span.parsedWord = parsed_word;
+                span.id = ["word_map_",id_map++].join(""); 
+                span.word_number = id_map;
+                div.appendChild(span);
+                
+                var span_space = document.createElement("span");
+                span_space.className = "sr-text";
+                span_space.innerHTML = " ";
+                div.appendChild(span_space);
+                
+                
+                span_words[parsed_word] = span.id;
+                lastWord = span;
+                
+                /// amazingly, seems in chrome "some" is a special key on all associative arrays?!
+                /// we will just prefix it
+                var key = [key_prefix,parsed_word].join("");
+                
+                if( !node_wordmap[key] ) 
+                {
+                    node_wordmap[key] = [];
+                }
+                
+                node_wordmap[key].push(span);
+            }
+        }  
+             
+        tnode.parentNode.appendChild(div);
+    }
+    
+    domtreetext_parsed = where;
+}
+
+var last_highlight = null;
+
+var document_progression = 0;
+
+function HighlightWord( sequence )
+{
+    if( node_wordmap[ key_prefix+sequence[sequence.length-1] ] == null ) return;
+    
+    for( var x=0;x<node_wordmap[ key_prefix+sequence[sequence.length-1] ].length;x++ )
+    {
+        var span = node_wordmap[ key_prefix+sequence[sequence.length-1] ][x];
+        
+        /// hacky improvement in case it finds a word higher up the document
+        if( span.word_number < document_progression ) continue;
+        
+        var first_span = span;
+        
+        /// go backwards through sequence and confirm all the previous words match
+        for( var s=sequence.length-1;s>=0;s-- )
+        {
+            if( span.parsedWord != null
+                && span.lastWord != null
+                && sequence[s] == span.parsedWord )
+            {
+                if(s==0)
+                { 
+                    ClearLastSelected();
+                    first_span.className += " highlight";
+                    last_highlight = first_span;
+                    
+                    if( domtree_root == document.body ) 
+                        window.scrollTo(first_span.offsetLeft,first_span.offsetTop);
+                    else domtree_root.scrollTop = first_span.offsetTop - 30;
+                        
+                    first_span.focus();
+                    
+                    document_progression = first_span.word_number;
+                    
+                    return null;
+                }
+                
+                span = span.lastWord;
+            }
+            else break;
+        }
+    }
+}
+
+function ClearLastSelected()
+{
+    if( last_highlight != null ) last_highlight.className = "sr-text";
+}
+
+function ResetDocumentProgression()
+{
+    document_progression = 0;
+}

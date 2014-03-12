@@ -2,6 +2,20 @@
 
 *jetzt* is a speed-reader extension for [chrome](http://google.com/chrome) inspired by [Spritz](http://www.spritzinc.com/).
 
+### Tim Scarfe's Branch
+
+- This version implements an alpha of highlighting the current word (see https://www.youtube.com/watch?v=jebPFbVdmTw). This can be done with `ALT`-`R` (article scraping) and the document will be highlighted in the background. `ALT`-`Z` will bring up a scrolling content window. `ALT`-`X` (selection mode with content highlighting). The old `ALT`-`S` is as it was. A lot more work is needed to clean this up. Because of how I manipulate the underlying document, it can make it render differently :(
+- If the word is a commonly used english word and less than 6 chars, I reduce the delay time as a function of how common it is
+- Punctuation doesn't influence the pivot
+- Punctuation is highlighted
+- Punctuation color set by .punctuation in css
+- Fixes issue where you get punctuation-only displayed for words i.e. "."
+- It also displays single quote wrappings, detects when a single quote should be part of the word and then displays it.
+- Improved black colour scheme
+- Open dyslexic font (I think this would improve anyone's reading speed)
+- h0ru5's local heading code, enabled to work for h1-4 using symbols ^*|>
+- h0ru5's local article parsing code (Readibility stle), enabled through `alt`-`a`
+
 ### Installation
 
 This is very much beta software so a proper chrome extension package is not currently provided. Instead: clone this repository, then, in chrome, navigate to chrome://extensions , enable developer mode, click "Load unpacked extension..." and select the directory you cloned.
@@ -19,6 +33,8 @@ Remember to pull every now and then for bugfixes and new features.
 Control is currently keyboard-only.
 
 - Initiate jetzt by pressing `alt`-`s` and clicking on the block of text you wish to read. Alternatively, select some text before pressing `alt`-`s`.
+
+- Initiate jetzt by pressing `alt`-`a` and it will automatically generate a local "readability" summary and display that instead. This means you don't need to select text in any way.
 
 - Change size with `+`/`-`.
 
@@ -66,7 +82,6 @@ I also welcome pull requests of all shapes and sizes. This project is still in h
 - [Brian Hanson](https://github.com/brianjhanson)
 - [ianzapolsky](https://github.com/ianzapolsky)
 - [Martin Butt](https://github.com/martinbutt)
-
 
 ### License
 

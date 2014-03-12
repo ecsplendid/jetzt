@@ -1,3 +1,4 @@
+
 chrome.browserAction.onClicked.addListener(function(tab) {
   console.log('Speed-reading in ' + tab.url);
   chrome.tabs.executeScript(null,{
@@ -20,3 +21,4 @@ chrome.contextMenus.onClicked.addListener(function(data) {
     });
   }
 });
+
