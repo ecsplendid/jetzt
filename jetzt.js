@@ -481,7 +481,7 @@ var wraps = {
   function parseText (text,$instructionator) {
 
     ///pre-process single quotes
-    text = text.replace( /['’](?=[st]|nt|es|cause|em|cept|tis|re|\d{2})/gi, "@|@" )
+    text = text.replace( /['’](?=(([dst]|nt|es|re)[\s$\n])|cause|em|cept|tis|\d{2})/gi, "@|@" )
     ///Javascript doesnt support lookbehind assertions grr
     text = text.replace( /s['’](?=\s|\n)/gi, "s@|@" )
     
@@ -1360,8 +1360,6 @@ function ParseDomTextTree(where)
 
 var last_highlight = null;
 
-var document_progression = 0;
-
 function HighlightWord( sequence )
 {
     if( node_wordmap[ key_prefix+sequence[sequence.length-1] ] == null ) return;
@@ -1369,9 +1367,6 @@ function HighlightWord( sequence )
     for( var x=0;x<node_wordmap[ key_prefix+sequence[sequence.length-1] ].length;x++ )
     {
         var span = node_wordmap[ key_prefix+sequence[sequence.length-1] ][x];
-        
-        /// hacky improvement in case it finds a word higher up the document
-        if( span.word_number < document_progression ) continue;
         
         var first_span = span;
         
@@ -1389,7 +1384,7 @@ function HighlightWord( sequence )
                     last_highlight = first_span;
                     
                     if( domtree_root == document.body ) 
-                        window.scrollTo(first_span.offsetLeft,first_span.offsetTop);
+                        window.scrollTo(first_span.offsetLeft,first_span.offsetTop- 60);
                     else domtree_root.scrollTop = first_span.offsetTop - 30;
                         
                     first_span.focus();
