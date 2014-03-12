@@ -4,7 +4,9 @@
 
 ### HIGHLIGHTING CURRENT WORD
 
-This version implements an alpha of highlighting the current word (see https://www.youtube.com/watch?v=K0as07PE7L0). It only works on simple documents with `ALT`-`R` (article scraping) and `ALT`-`X` (selection mode). The old `ALT`-`S` is as it was. 
+This version implements an alpha of highlighting the current word (see https://www.youtube.com/watch?v=K0as07PE7L0). 
+
+This can be done with `ALT`-`R` (article scraping) and the document will be highlighted in the background. `ALT`-`Z` will bring up a scrolling content window. `ALT`-`X` (selection mode with content highlighting). The old `ALT`-`S` is as it was. 
 
 A lot more work is needed to clean this up. Because of how I manipulate the underlying document, it can make it render differently :(
 
