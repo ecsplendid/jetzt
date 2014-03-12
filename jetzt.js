@@ -481,7 +481,7 @@ var wraps = {
   function parseText (text,$instructionator) {
 
     ///pre-process single quotes
-    text = text.replace( /['’](?=(([dst]|nt|es|re)[\s$\n])|cause|em|cept|tis|\d{2})/gi, "@|@" )
+    text = text.replace( /['’](?=(([dst]|nt|es|re|ve)[\s$\n])|cause|em|cept|tis|\d{2})/gi, "@|@" )
     ///Javascript doesnt support lookbehind assertions grr
     text = text.replace( /s['’](?=\s|\n)/gi, "s@|@" )
     
