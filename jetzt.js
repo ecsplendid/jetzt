@@ -1038,8 +1038,13 @@ var wraps = {
       if (running) jetzt.toggleRunning();
       reader.hide();
       reader = null;
+
+      removeClass(article,"in")
+      
       instructions = null;
-      ClearLastSelected();
+      setTimeout( function() {
+        ClearLastSelected();
+        }, 1000 );
     } else {
       throw new Error("jetzt not yet initialized");
     }
@@ -1116,11 +1121,28 @@ var wraps = {
     }
   }
   
-  function scrape_article()
+  var article = null;
+  
+  function scrape_article(float_window)
   {
-     var article = scrape();
-     ParseDomTextTree();
-     init(article);
+    if( article == null )
+    {
+         article = scrape();
+         
+         if( float_window )
+         {
+            article.className = "float-article in";
+            document.body.appendChild(article);
+         }
+     
+        ParseDomTextTree( float_window ? article : document.body );
+    }
+    else article.className += " in";
+    
+   
+    
+    
+    init(article);
   }
   
   window.jetzt = {
@@ -1146,7 +1168,12 @@ var wraps = {
    //ALT-A for article scrape
     if (!instructions && ev.altKey && ev.keyCode === 65) { 
       ev.preventDefault();
-      scrape_article();
+      scrape_article(false);
+    }
+    //ALT-Z for article scrape with content window
+    if (!instructions && ev.altKey && ev.keyCode === 90) { 
+      ev.preventDefault();
+      scrape_article(true);
     }
     //ALT-S as before
     if (!instructions && ev.altKey && ev.keyCode === 83) { 
@@ -1156,7 +1183,7 @@ var wraps = {
     //ALT-X for scrape+textselect
     if (!instructions && ev.altKey && ev.keyCode === 88) { 
       ev.preventDefault();
-      ParseDomTextTree();
+      ParseDomTextTree(document.body);
       select();
     }
   });
@@ -1170,17 +1197,20 @@ var node_wordmap = [];
 var key_prefix = "wk_";
 
 var domtreetext_parsed = false;
+var domtree_root = null;
 
-function ParseDomTextTree()
+function ParseDomTextTree(where)
 {
     if( domtreetext_parsed ) return;
+    
+    domtree_root = where;
     
     doc_words = [];
     text_nodes = [];
     span_words = [];
     node_wordmap = [];
 
-    var walk = document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null,false), tn;
+    var walk = document.createTreeWalker(where,NodeFilter.SHOW_TEXT,null,false), tn;
 
     while(tn=walk.nextNode()) 
     {
@@ -1275,7 +1305,11 @@ function HighlightWord( sequence )
                     first_span.className += " highlight";
                     last_highlight = first_span;
                     
-                    window.scrollTo(first_span.offsetLeft,first_span.offsetTop-50);
+                    if( domtree_root == document.body ) 
+                        window.scrollTo(first_span.offsetLeft,first_span.offsetTop);
+                    else domtree_root.scrollTop = first_span.offsetTop - 30;
+                        
+                    first_span.focus();
                     
                     document_progression = first_span.word_number;
                     
