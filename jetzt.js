@@ -482,6 +482,9 @@ var wraps = {
 
     ///pre-process single quotes
     text = text.replace( /['’](?=[st]|nt|es)/gi, "@|@" )
+    ///Javascript doesnt support lookbehind assertions grr
+    text = text.replace( /s['’]/gi, "s@|@" )
+    
   
     var tokens = text.match(/["“”‘’'\(\)\/–—]|--+|\n+|([^\s"“”‘’'\(\)\/–—])+/g);
 
@@ -499,8 +502,6 @@ var wraps = {
     {
       var tkn = tokens[i];
       
-      console.log(tkn)
-     
       /// put the single quote back in
       
       tkn = tokens[i] = tkn.replace("@|@","’");
